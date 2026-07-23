@@ -10,7 +10,7 @@ module generate_adders #(
 );
 genvar i;
 generate
-    for (i = 0; i < OUTPUT_SIZE; i = i + 1) begin
+    for (i = 0; i < OUTPUT_SIZE; i = i + 1) begin : gen_adders
         adder_unit #(
             .DATA_WIDTH (DATA_WIDTH)            // Bit width of operands and sum output
         ) u_adder_unit (
