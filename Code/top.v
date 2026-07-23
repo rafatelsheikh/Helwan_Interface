@@ -2,7 +2,7 @@ module top #(
     parameter DATA_WIDTH             = 16,  // Width in bits of a single data element
     parameter PARTIAL_SIZE           = 4,   // Number of data elements per Partial Transaction
     parameter OUTPUT_SIZE            = 8,   // Number of data elements per Output Word
-    parameter MAX_SEGMENTS_PER_RANGE = 100  // Max processing segments per range
+    parameter MAX_SEGMENTS_PER_RANGE = 100,  // Max processing segments per range
     parameter ADDR_WIDTH             = $clog2(MAX_SEGMENTS_PER_RANGE * PARTIAL_SIZE**2 / OUTPUT_SIZE),   // Width of logical output-address values
 )(
     input  wire                                clk,   
