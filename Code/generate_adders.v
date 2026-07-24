@@ -14,9 +14,9 @@ generate
         adder_unit #(
             .DATA_WIDTH (DATA_WIDTH)            // Bit width of operands and sum output
         ) u_adder_unit (
-            .operand_a (operand_a[(i+1)*DATA_WIDTH:i*DATA_WIDTH]),        // Input: [DATA_WIDTH-1:0] Operand A
-            .operand_b (operand_b[(i+1)*DATA_WIDTH:i*DATA_WIDTH]),        // Input: [DATA_WIDTH-1:0] Operand B
-            .sum       (data_out[(i+1)*DATA_WIDTH:i*DATA_WIDTH])      // Output: [DATA_WIDTH-1:0] Result sum
+            .operand_a (operand_a[(i+1)*DATA_WIDTH-1:i*DATA_WIDTH]),        // Input: [DATA_WIDTH-1:0] Operand A
+            .operand_b (operand_b[(i+1)*DATA_WIDTH-1:i*DATA_WIDTH]),        // Input: [DATA_WIDTH-1:0] Operand B
+            .sum       (data_out[(i+1)*DATA_WIDTH-1:i*DATA_WIDTH])      // Output: [DATA_WIDTH-1:0] Result sum
         );
     end
 endgenerate
