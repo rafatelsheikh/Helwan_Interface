@@ -56,7 +56,7 @@ module input_sampler #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             data_sampled <= 0;
-        end if (sample_data && (partials_count == NUMBER_OF_PARTIALS_PER_OUTPUT - 1)) begin
+        end else if (sample_data && (partials_count == NUMBER_OF_PARTIALS_PER_OUTPUT - 1)) begin
             data_sampled <= 1;
         end else begin
             data_sampled <= 0;
