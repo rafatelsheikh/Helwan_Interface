@@ -33,7 +33,7 @@ module top #(
     localparam MIN_BUFFER_CAPACITY = MAX_SEGMENTS_PER_RANGE * OUTPUTS_PER_SEGMENT;
     localparam BUFFER_SIZE = 5 * MIN_BUFFER_CAPACITY; // this constant indicate how may ranges of max size can the ram hold
     localparam PHY_ADDRESS_WIDTH = $clog2(BUFFER_SIZE);
-    localparam MEM_SIZE = PHY_ADDRESS_WIDTH**2;
+    localparam MEM_SIZE = 2**PHY_ADDRESS_WIDTH;
 
     // number of clocks to process a segment
     localparam T_SEGMENT               = PARTIAL_SIZE; // *********************** TO BE MODIFIED
