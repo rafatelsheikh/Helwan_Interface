@@ -1,5 +1,5 @@
 module mux #(
-    DATA_WIDTH = 8;
+    parameter DATA_WIDTH = 8
 )(
     input sel,
     input [DATA_WIDTH-1:0] in_a,
