@@ -53,12 +53,18 @@ module top #(
     reg sampled_data_valid;
     reg [OUTPUT_BUS_WIDTH-1:0] sampled_data;
     reg [OUTPUT_BUS_WIDTH-1:0] alu_operand_a;
-    reg [OUTPUT_BUS_WIDTH-1:0] alu_operand_b;
     reg [OUTPUT_BUS_WIDTH-1:0] alu_result;
     reg initial_partial_end;
     reg accumulated_partial_end;
     reg direction_change;
     reg [OUTPUT_BUS_WIDTH-1:0] mem_data_in;
+
+    // reg variables
+    reg alu_read_en_reg;
+    reg initial_partial_end_reg;
+    reg accumulated_partial_end_reg;
+    reg direction_change_reg;
+    reg [ADDR_WIDTH-1:0] output_addr_reg;
 
     // Instantiate RAM
     RAM #(
@@ -70,9 +76,9 @@ module top #(
         .clk(clk),
         .out_read_en(output_valid),
         .out_read_address(out_read_address),
-        .alu_read_en(alu_read_en),
+        .alu_read_en(alu_read_en_reg),
         .alu_read_address(alu_read_address),
-        .write_en(sampled_data_valid),
+        .write_en(sampled_data_valid_reg),
         .write_address(alu_read_address),
         .data_in(mem_data_in),
         .out_read_data(output_data),
@@ -86,7 +92,7 @@ module top #(
         .OUTPUT_BUS_WIDTH(OUTPUT_BUS_WIDTH)
     ) my_alu (
         .operand_a(alu_operand_a),
-        .operand_b(alu_operand_b),
+        .operand_b(sampled_data_reg),
         .data_out(alu_result)
     );
 
@@ -105,11 +111,11 @@ module top #(
     );
 
     // Instantiate Control Unit
-    control_unit #(
+    cu #(
         .PARTIAL_SIZE(PARTIAL_SIZE),
         .DATA_WIDTH(DATA_WIDTH),
         .NUMBER_OF_PARTIALS_PER_OUTPUT(PARTIALS_PER_OUTPUT)
-    ) my_control_unit (
+    ) my_cu (
         .clk(clk),
         .rst_n(rst_n),
         .partial_valid(partial_valid),
@@ -118,25 +124,25 @@ module top #(
         .next_range(next_range),
         .operation_done(operation_done),
         .sample_data(sample_data),
-        .alu_read_en(alu_read_en),
+        .alu_read_en(alu_read_en_reg),
         .initial_partial_end(initial_partial_end),
         .accumulated_partial_end(accumulated_partial_end),
         .direction_change(direction_change)
     );
 
     // Instantiate Memory Interpreter
-    memory_interpreter #(
+    mem_arbiter #(
         .ADDR_WIDTH(ADDR_WIDTH),
         .MEM_SIZE(MEM_SIZE),
         .ADDR_SIZE(PHY_ADDRESS_WIDTH),
         .RANGES_NUMBER(2)
-    ) my_memory_interpreter (
+    ) my_mem_arbiter (
         .clk(clk),
         .rst_n(rst_n),
-        .end_range(initial_partial_end),
-        .accumulated_processing_end(accumulated_partial_end),
-        .address_in(output_addr),
-        .change_direction(direction_change),
+        .end_range(initial_partial_end_reg),
+        .accumulated_processing_end(accumulated_partial_end_reg),
+        .address_in(output_addr_reg),
+        .change_direction(direction_change_reg),
         .en(sampled_data_valid),
         .alu_address_out(alu_read_address),
         .out_address_out(out_read_address),
@@ -146,9 +152,28 @@ module top #(
     mux #(
         .DATA_WIDTH(OUTPUT_BUS_WIDTH)
     ) my_mux (
-        .sel(alu_read_en),
+        .sel(alu_read_en_reg),
         .in_a(alu_result),
         .in_b(sampled_data),
         .out(mem_data_in)
     );
+
+    pipeline_reg #(
+        .ADDR_WIDTH(ADDR_WIDTH)
+
+    ) my_pipeline (
+        .clk(clk),
+        .rst_n(rst_n),
+        .alu_read_en(alu_read_en),
+        .initial_partial_end(initial_partial_end),
+        .accumulated_partial_end(accumulated_partial_end),
+        .direction_change(direction_change),
+        .output_addr(output_addr),
+        .alu_read_en_reg(alu_read_en_reg),
+        .initial_partial_end_reg(initial_partial_end_reg),
+        .accumulated_partial_end_reg(accumulated_partial_end_reg),
+        .direction_change_reg(direction_change_reg),
+        .output_addr_reg(output_addr_reg)
+    );
+
 endmodule
