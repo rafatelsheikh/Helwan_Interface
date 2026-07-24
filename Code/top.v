@@ -66,34 +66,24 @@ module top #(
     reg direction_change_reg;
     reg [ADDR_WIDTH-1:0] output_addr_reg;
 
-    // Instantiate RAM
-    RAM #(
+    // Instantiate Control Unit
+    cu #(
+        .PARTIAL_SIZE(PARTIAL_SIZE),
         .DATA_WIDTH(DATA_WIDTH),
-        .OUTPUT_SIZE(OUTPUT_SIZE),
-        .MEM_SIZE(MEM_SIZE),
-        .ADDR_SIZE(PHY_ADDRESS_WIDTH)
-    ) my_ram (
+        .NUMBER_OF_PARTIALS_PER_OUTPUT(PARTIALS_PER_OUTPUT)
+    ) my_cu (
         .clk(clk),
-        .out_read_en(output_valid),
-        .out_read_address(out_read_address),
-        .alu_read_en(alu_read_en_reg),
-        .alu_read_address(alu_read_address),
-        .write_en(sampled_data_valid_reg),
-        .write_address(alu_read_address),
-        .data_in(mem_data_in),
-        .out_read_data(output_data),
-        .alu_read_data(alu_operand_a)
-    );
-
-    // Instantiate ALU
-    generate_adders #(
-        .DATA_WIDTH(DATA_WIDTH),
-        .OUTPUT_SIZE(OUTPUT_SIZE),
-        .OUTPUT_BUS_WIDTH(OUTPUT_BUS_WIDTH)
-    ) my_alu (
-        .operand_a(alu_operand_a),
-        .operand_b(sampled_data_reg),
-        .data_out(alu_result)
+        .rst_n(rst_n),
+        .partial_valid(partial_valid),
+        .segment_step(segment_step),
+        .phase_change(phase_change),
+        .next_range(next_range),
+        .operation_done(operation_done),
+        .sample_data(sample_data),
+        .alu_read_en(alu_read_en),
+        .initial_partial_end(initial_partial_end),
+        .accumulated_partial_end(accumulated_partial_end),
+        .direction_change(direction_change)
     );
 
     // Instantiate Input Sampler
@@ -110,54 +100,7 @@ module top #(
         .valid_out(sampled_data_valid)
     );
 
-    // Instantiate Control Unit
-    cu #(
-        .PARTIAL_SIZE(PARTIAL_SIZE),
-        .DATA_WIDTH(DATA_WIDTH),
-        .NUMBER_OF_PARTIALS_PER_OUTPUT(PARTIALS_PER_OUTPUT)
-    ) my_cu (
-        .clk(clk),
-        .rst_n(rst_n),
-        .partial_valid(partial_valid),
-        .segment_step(segment_step),
-        .phase_change(phase_change),
-        .next_range(next_range),
-        .operation_done(operation_done),
-        .sample_data(sample_data),
-        .alu_read_en(alu_read_en_reg),
-        .initial_partial_end(initial_partial_end),
-        .accumulated_partial_end(accumulated_partial_end),
-        .direction_change(direction_change)
-    );
-
-    // Instantiate Memory Interpreter
-    mem_arbiter #(
-        .ADDR_WIDTH(ADDR_WIDTH),
-        .MEM_SIZE(MEM_SIZE),
-        .ADDR_SIZE(PHY_ADDRESS_WIDTH),
-        .RANGES_NUMBER(2)
-    ) my_mem_arbiter (
-        .clk(clk),
-        .rst_n(rst_n),
-        .end_range(initial_partial_end_reg),
-        .accumulated_processing_end(accumulated_partial_end_reg),
-        .address_in(output_addr_reg),
-        .change_direction(direction_change_reg),
-        .en(sampled_data_valid),
-        .alu_address_out(alu_read_address),
-        .out_address_out(out_read_address),
-        .output_valid(output_valid)
-    );
-
-    mux #(
-        .DATA_WIDTH(OUTPUT_BUS_WIDTH)
-    ) my_mux (
-        .sel(alu_read_en_reg),
-        .in_a(alu_result),
-        .in_b(sampled_data),
-        .out(mem_data_in)
-    );
-
+    // pipelining
     pipeline_reg #(
         .ADDR_WIDTH(ADDR_WIDTH)
 
@@ -174,6 +117,67 @@ module top #(
         .accumulated_partial_end_reg(accumulated_partial_end_reg),
         .direction_change_reg(direction_change_reg),
         .output_addr_reg(output_addr_reg)
+    );
+
+    // Instantiate ALU
+    generate_adders #(
+        .DATA_WIDTH(DATA_WIDTH),
+        .OUTPUT_SIZE(OUTPUT_SIZE),
+        .OUTPUT_BUS_WIDTH(OUTPUT_BUS_WIDTH)
+    ) my_alu (
+        .operand_a(alu_operand_a),
+        .operand_b(sampled_data),
+        .data_out(alu_result)
+    );
+
+    // mux for selecting write data in memory
+    mux #(
+        .DATA_WIDTH(OUTPUT_BUS_WIDTH)
+    ) my_mux (
+        .sel(alu_read_en_reg),
+        .in_a(alu_result),
+        .in_b(sampled_data),
+        .out(mem_data_in)
+    );
+
+    // Instantiate Memory Interpreter
+    mem_arbiter #(
+        .ADDR_WIDTH(ADDR_WIDTH),
+        .BUFFER_SIZE(MEM_SIZE),
+        .PHY_ADDRESS_WIDTH(PHY_ADDRESS_WIDTH),
+        .OUTPUTS_PER_SEGMENT(OUTPUTS_PER_SEGMENT),
+        .MAX_SEGMENTS_PER_RANGE(MAX_SEGMENTS_PER_RANGE),
+        .MAX_DOWNSTREAM_DELAY(MAX_DOWNSTREAM_DELAY)
+    ) my_mem_arbiter (
+        .clk(clk),
+        .rst_n(rst_n),
+        .end_range(initial_partial_end_reg),
+        .end_accumlated_processing(accumulated_partial_end_reg),
+        .address_in(output_addr_reg),
+        .change_direction(direction_change_reg),
+        .en(sampled_data_valid),
+        .alu_addr_out(alu_read_address),
+        .out_addr_out(out_read_address),
+        .output_valid(output_valid)
+    );
+
+    // Instantiate RAM
+    RAM #(
+        .DATA_WIDTH(DATA_WIDTH),
+        .OUTPUT_SIZE(OUTPUT_SIZE),
+        .MEM_SIZE(MEM_SIZE),
+        .ADDR_SIZE(PHY_ADDRESS_WIDTH)
+    ) my_ram (
+        .clk(clk),
+        .out_read_en(output_valid),
+        .out_read_address(out_read_address),
+        .alu_read_en(alu_read_en_reg),
+        .alu_read_address(alu_read_address),
+        .write_en(sampled_data_valid),
+        .write_address(alu_read_address),
+        .data_in(mem_data_in),
+        .out_read_data(output_data),
+        .alu_read_data(alu_operand_a)
     );
 
 endmodule
