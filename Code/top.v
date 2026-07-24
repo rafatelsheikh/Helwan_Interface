@@ -3,7 +3,7 @@ module top #(
     parameter PARTIAL_SIZE           = 4,   // Number of data elements per Partial Transaction
     parameter OUTPUT_SIZE            = 8,   // Number of data elements per Output Word
     parameter MAX_SEGMENTS_PER_RANGE = 100,  // Max processing segments per range
-    parameter ADDR_WIDTH             = $clog2(MAX_SEGMENTS_PER_RANGE * PARTIAL_SIZE**2 / OUTPUT_SIZE),   // Width of logical output-address values
+    parameter ADDR_WIDTH             = $clog2(MAX_SEGMENTS_PER_RANGE * PARTIAL_SIZE**2 / OUTPUT_SIZE)   // Width of logical output-address values
 )(
     input  wire                                clk,   
     input  wire                                rst_n,           // Asynchronous active-low reset
@@ -68,7 +68,6 @@ module top #(
         .ADDR_SIZE(PHY_ADDRESS_WIDTH)
     ) my_ram (
         .clk(clk),
-        .rst_n(rst_n),
         .out_read_en(output_valid),
         .out_read_address(out_read_address),
         .alu_read_en(alu_read_en),
@@ -145,7 +144,7 @@ module top #(
     );
 
     mux #(
-        .DATA_WIDTH(OUTPUT_BUS_WIDTH),
+        .DATA_WIDTH(OUTPUT_BUS_WIDTH)
     ) my_mux (
         .sel(alu_read_en),
         .in_a(alu_result),
