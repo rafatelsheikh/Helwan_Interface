@@ -50,7 +50,7 @@ always @(*)
     begin
         case (cs)
             INITIAL_PARTIALS :      begin
-                                        if (phase_change)
+                                        if (phase_change && (!next_range && !operation_done))
                                             begin
                                                 ns = ACCUMULATED_PARTIALS;
                                             end
@@ -73,7 +73,7 @@ always @(*)
     end
 
 // sample_data Logic
-assign sample_data = (segment_step || phase_change || next_range || operation_done); 
+assign sample_data = (partial_valid || segment_step || phase_change || next_range || operation_done); 
 
 // alu_read_en Logic
 always @(*)
@@ -127,18 +127,6 @@ always @(*)
         endcase 
     end
 
-// direction_change Logic
-always @(posedge clk or negedge rst_n)
-    begin
-        if (!rst_n)
-            begin
-                phase_change_temp <= 1'b0;
-            end
-        else 
-            begin
-                phase_change_temp <= phase_change;
-            end
-    end
-assign direction_change = phase_change && ! phase_change_temp;
+assign direction_change = phase_change && (!next_range && !operation_done);
 
 endmodule
