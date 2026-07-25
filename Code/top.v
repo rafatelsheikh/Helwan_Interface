@@ -17,9 +17,9 @@ module top #(
     input  wire                                 operation_done,  // Final Partial Transaction of operation
 
     // Downstream Interface 
-    input  wire [ADDR_WIDTH-1:0]               output_addr,     // Logical address requested by downstream
-    output reg                                 output_valid,    // indicate if Output data is available
-    output reg  [(OUTPUT_SIZE*DATA_WIDTH)-1:0] output_data      // Output Word bus
+    input  wire [ADDR_WIDTH-1:0]                output_addr,     // Logical address requested by downstream
+    output wire                                 output_valid,    // indicate if Output data is available
+    output wire  [(OUTPUT_SIZE*DATA_WIDTH)-1:0] output_data      // Output Word bus
 );
 
     localparam PARTIALS_PER_OUTPUT = OUTPUT_SIZE / PARTIAL_SIZE;
@@ -46,25 +46,25 @@ module top #(
     localparam MAX_COMPLETION_LATENCY  = T_SEGMENT;
 
     // Internal Signals
-    reg [PHY_ADDRESS_WIDTH-1:0] out_read_address;
-    reg alu_read_en;
-    reg [PHY_ADDRESS_WIDTH-1:0] alu_read_address;
-    reg sample_data;
-    reg sampled_data_valid;
-    reg [OUTPUT_BUS_WIDTH-1:0] sampled_data;
-    reg [OUTPUT_BUS_WIDTH-1:0] alu_operand_a;
-    reg [OUTPUT_BUS_WIDTH-1:0] alu_result;
-    reg initial_partial_end;
-    reg accumulated_partial_end;
-    reg direction_change;
-    reg [OUTPUT_BUS_WIDTH-1:0] mem_data_in;
+    wire [PHY_ADDRESS_WIDTH-1:0] out_read_address;
+    wire alu_read_en;
+    wire [PHY_ADDRESS_WIDTH-1:0] alu_read_address;
+    wire sample_data;
+    wire sampled_data_valid;
+    wire [OUTPUT_BUS_WIDTH-1:0] sampled_data;
+    wire [OUTPUT_BUS_WIDTH-1:0] alu_operand_a;
+    wire [OUTPUT_BUS_WIDTH-1:0] alu_result;
+    wire initial_partial_end;
+    wire accumulated_partial_end;
+    wire direction_change;
+    wire [OUTPUT_BUS_WIDTH-1:0] mem_data_in;
 
     // reg variables
-    reg alu_read_en_reg;
-    reg initial_partial_end_reg;
-    reg accumulated_partial_end_reg;
-    reg direction_change_reg;
-    reg [ADDR_WIDTH-1:0] output_addr_reg;
+    wire alu_read_en_reg;
+    wire initial_partial_end_reg;
+    wire accumulated_partial_end_reg;
+    wire direction_change_reg;
+    wire [ADDR_WIDTH-1:0] output_addr_reg;
 
     // Instantiate Control Unit
     cu #(
