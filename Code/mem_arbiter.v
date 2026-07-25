@@ -50,10 +50,20 @@ module mem_arbiter #(
     wire [MAX_RANGE_NUMBER-1:0] counter_done;
   
     
-    // handeling alu read address & current range pointer
-    wire inc;
+  
+    reg inc;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n || end_accumlated_processing)begin
+            inc <= 0;
+        end
+        else begin
+            if (change_direction) inc <= ~inc;
+            else inc <= inc;
+        end
+    end
     assign alu_addr_out = current_range_ptr;
-    assign inc = (!rst_n || end_accumlated_processing) ? 1 : (change_direction)? ~inc : inc; // latched need to be modified inc must be register
+    // handeling alu read address & current range pointer
+    //assign inc = (!rst_n || end_accumlated_processing) ? 1 : (change_direction)? ~inc : inc; // latched need to be modified inc must be register
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             current_range_ptr <= 0;
