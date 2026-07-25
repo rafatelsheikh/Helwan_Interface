@@ -26,6 +26,7 @@ module mem_arbiter #(
     localparam block_idx_width = $clog2(MAX_RANGE_NUMBER); 
 
     reg [block_idx_width-1:0] block_idx; // used to index memory blocks
+    reg [block_idx_width-1:0] block_idx_comb; // comb version
     reg [block_idx_width-1:0] oldest_valid_ptr; // pointing to oldeest range
     reg [MAX_RANGE_NUMBER-1:0] valid_array; // bit 0 -> block 0 (mask to show which block has valid data)
 
@@ -49,7 +50,7 @@ module mem_arbiter #(
     reg inc;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n || end_accumlated_processing)begin
-            inc <= 0;
+            inc <= 1;
         end
         else begin
             if (change_direction) inc <= ~inc;
@@ -66,10 +67,10 @@ module mem_arbiter #(
         else begin
             // handle inc / dec of the pointer
             if ((end_range && (!change_direction)) || end_accumlated_processing) begin
-                current_range_ptr <= block_idx * MAX_OUTPUTWORDS_PER_RANGE;
+                current_range_ptr <= block_idx_comb * MAX_OUTPUTWORDS_PER_RANGE;
             end
             else begin
-                if (en) begin
+                if (en && !change_direction) begin
                     if (inc)
                         current_range_ptr <= current_range_ptr + 1'b1;
                     else
@@ -97,6 +98,24 @@ module mem_arbiter #(
                 end
             end
             else block_idx <= block_idx;
+        end
+    end
+
+    // current index pointer combinational (absolute cinema !!!!)
+    always @(*) begin
+        if (!rst_n) begin
+            block_idx_comb = 0;
+        end
+        else begin    
+            if ((end_range && (!change_direction)) || end_accumlated_processing) begin
+                if (block_idx_comb == MAX_RANGE_NUMBER-1) begin
+                    block_idx_comb = 0;
+                end
+                else begin
+                    block_idx_comb = block_idx_comb + 1;    
+                end
+            end
+            else block_idx_comb = block_idx_comb;
         end
     end
 
