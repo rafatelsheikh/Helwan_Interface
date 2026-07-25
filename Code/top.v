@@ -64,7 +64,6 @@ module top #(
     wire initial_partial_end_reg;
     wire accumulated_partial_end_reg;
     wire direction_change_reg;
-    wire [ADDR_WIDTH-1:0] output_addr_reg;
 
     // Instantiate Control Unit
     cu #(
@@ -101,22 +100,17 @@ module top #(
     );
 
     // pipelining
-    pipeline_reg #(
-        .ADDR_WIDTH(ADDR_WIDTH)
-
-    ) my_pipeline (
+    pipeline_reg my_pipeline (
         .clk(clk),
         .rst_n(rst_n),
         .alu_read_en(alu_read_en),
         .initial_partial_end(initial_partial_end),
         .accumulated_partial_end(accumulated_partial_end),
         .direction_change(direction_change),
-        .output_addr(output_addr),
         .alu_read_en_reg(alu_read_en_reg),
         .initial_partial_end_reg(initial_partial_end_reg),
         .accumulated_partial_end_reg(accumulated_partial_end_reg),
-        .direction_change_reg(direction_change_reg),
-        .output_addr_reg(output_addr_reg)
+        .direction_change_reg(direction_change_reg)
     );
 
     // Instantiate ALU
@@ -153,7 +147,7 @@ module top #(
         .rst_n(rst_n),
         .end_range(initial_partial_end_reg),
         .end_accumlated_processing(accumulated_partial_end_reg),
-        .address_in(output_addr_reg),
+        .address_in(output_addr),
         .change_direction(direction_change_reg),
         .en(sampled_data_valid),
         .alu_addr_out(alu_read_address),
