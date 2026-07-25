@@ -1,8 +1,3 @@
-/*
-questions? 
-does the downstream may request data even if the buffer is empty
-hallo mr rafat you may struggle here please bare with me and call 01012887393 for any issues (the design is on fire)
-*/
 module mem_arbiter #(
     parameter ADDR_WIDTH = 8, // logical range address
     parameter BUFFER_SIZE = 1024,
